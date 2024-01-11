@@ -41,39 +41,42 @@ def main(argv):
         with open(os.path.join(args.output_dir, "compiled.ssb"), "wb") as f2:
             f2.write(b)
 
-    routine_ops = ssb.get_filled_routine_ops()
-
-    resolver = OpsLabelJumpToResolver(routine_ops)
-    routine_ops = list(resolver)
-
-    grapher = SsbGraphMinimizer(routine_ops)
     try:
-        draw_graphs(grapher, args, "0_before_optimize")
+        routine_ops = ssb.get_filled_routine_ops()
 
-        grapher.optimize_paths()
-        draw_graphs(grapher, args, "1_after_optimize")
+        resolver = OpsLabelJumpToResolver(routine_ops)
+        routine_ops = list(resolver)
 
-        grapher.build_branches()
-        draw_graphs(grapher, args, "2_after_branch_before_group")
-        grapher.group_branches()
-        draw_graphs(grapher, args, "3_after_branch1")
-        grapher.invert_branches()
-        draw_graphs(grapher, args, "4_after_branch2")
+        grapher = SsbGraphMinimizer(routine_ops)
+        try:
+            draw_graphs(grapher, args, "0_before_optimize")
 
-        grapher.build_and_group_switch_cases()
-        draw_graphs(grapher, args, "5_after_switch1")
-        grapher.group_switch_cases()
-        draw_graphs(grapher, args, "6_after_switch2")
-        grapher.build_switch_fallthroughs()
-        draw_graphs(grapher, args, "7_after_switch3")
+            grapher.optimize_paths()
+            draw_graphs(grapher, args, "1_after_optimize")
 
-        grapher.build_loops()
-        draw_graphs(grapher, args, "8_after_loops")
+            grapher.build_branches()
+            draw_graphs(grapher, args, "2_after_branch_before_group")
+            grapher.group_branches()
+            draw_graphs(grapher, args, "3_after_branch1")
+            grapher.invert_branches()
+            draw_graphs(grapher, args, "4_after_branch2")
 
-        grapher.remove_label_markers()
-        draw_graphs(grapher, args, "9_done")
+            grapher.build_and_group_switch_cases()
+            draw_graphs(grapher, args, "5_after_switch1")
+            grapher.group_switch_cases()
+            draw_graphs(grapher, args, "6_after_switch2")
+            grapher.build_switch_fallthroughs()
+            draw_graphs(grapher, args, "7_after_switch3")
+
+            grapher.build_loops()
+            draw_graphs(grapher, args, "8_after_loops")
+
+            grapher.remove_label_markers()
+            draw_graphs(grapher, args, "9_done")
+        except:
+            warnings.warn("Failed at least one graph step. Skipping rest. Decompiling will fail.")
     except:
-        warnings.warn("Failed at least one graph step. Skipping rest. Decompiling will fail.")
+        warnings.warn("Failed even preparing graph debugging. This script decompilation fails very early.")
 
     with open(os.path.join(args.output_dir, "original.exps"), "w") as fo:
         with open(args.path_to_original_source_code, "r") as fs:
